@@ -6,64 +6,39 @@
 package org.jboss.pull.shared;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Jason T. Greene
  */
 public class UserList {
-    private final Set<String> list;
-    private final File file;
 
-    private UserList(Set<String> list, File file) {
+    private final HashSet<String> list;
+
+    private UserList(HashSet<String> list) {
         this.list = list;
-        this.file = file;
     }
 
     public static UserList loadUserList(String fileName) {
-        BufferedReader reader = null;
-        try {
-            File file = new File(fileName);
-            file.createNewFile();
-            reader = new BufferedReader(new FileReader(file));
-            HashSet<String> list = new HashSet<String>();
+        HashSet<String> list = new HashSet<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                list.add(line);
+                if (!line.trim().isEmpty())
+                    list.add(line.trim());
             }
-            return new UserList(list, file);
         } catch (FileNotFoundException e) {
-            throw new IllegalStateException(e);
+            throw new RuntimeException("Can not find user list file: " + fileName, e);
         } catch (IOException e) {
-            throw new IllegalStateException(e);
-        } finally {
-            Util.safeClose(reader);
+            throw new RuntimeException("Can not load user list file: " + fileName, e);
         }
+        return new UserList(list);
     }
 
     public boolean has(String name) {
         return list.contains(name);
-    }
-
-    public void add(String user) {
-        list.add(user);
-        PrintWriter stream = null;
-        try {
-            stream = new PrintWriter(new FileOutputStream(file, true));
-            stream.println(user);
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException(e);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        } finally {
-            Util.safeClose(stream);
-        }
     }
 }

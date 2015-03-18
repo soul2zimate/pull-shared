@@ -26,6 +26,7 @@ import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
+import org.jboss.logging.Logger;
 import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
@@ -34,11 +35,10 @@ import org.jboss.pull.shared.connectors.jira.JiraHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A shared functionality regarding mergeable PRs, Github and Bugzilla.
@@ -47,7 +47,7 @@ import java.util.logging.Logger;
  * @author wangchao
  */
 public class PullHelper {
-    private Logger LOG = Logger.getLogger(PullHelper.class.getName());
+    private Logger LOGGER = Logger.getLogger(PullHelper.class);
 
     // private final Properties props;
     private final PullEvaluatorFacade evaluatorFacade;
@@ -65,7 +65,7 @@ public class PullHelper {
         return props;
     }
 
-    public PullHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
+    public PullHelper(final String configurationFileProperty, final String configurationFileDefault) {
         try {
             ghHelper = new GithubHelper(configurationFileProperty, configurationFileDefault);
             bzHelper = new BZHelper(configurationFileProperty, configurationFileDefault);
@@ -78,10 +78,8 @@ public class PullHelper {
 
             adminList = UserList.loadUserList(Util.require(props, "admin.list.file"));
 
-        } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException("Can not load properties from configuration file", e);
         }
     }
 
@@ -107,7 +105,7 @@ public class PullHelper {
         List<RedhatPullRequest> redhatPullRequests = new ArrayList<RedhatPullRequest>();
 
         for (PullRequest pullRequest : pullRequests) {
-            LOG.log(Level.INFO, "Found PR #{0,number,#}", pullRequest.getNumber());
+            LOGGER.info("Found PR #" + pullRequest.getNumber());
             redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, jiraHelper, ghHelper));
         }
 

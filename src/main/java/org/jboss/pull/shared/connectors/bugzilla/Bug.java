@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
 
@@ -44,6 +45,8 @@ public class Bug implements Issue {
     }
 
     private static final long serialVersionUID = 6967220126171894474L;
+
+    private static final Logger LOGGER = Logger.getLogger(Bug.class);
 
     // includes attributes for Bug.get execution
     public static final Object[] include_fields = { "id", "alias", "product", "component", "version", "priority", "severity",
@@ -120,7 +123,7 @@ public class Bug implements Issue {
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
         } catch (MalformedURLException malformed) {
-            System.err.printf("Invalid URL formed: %s. \n", malformed);
+            LOGGER.error("Invalid URL formed", malformed);
         }
     }
 

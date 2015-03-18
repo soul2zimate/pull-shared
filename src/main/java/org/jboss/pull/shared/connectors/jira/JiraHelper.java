@@ -46,16 +46,14 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
 
     private JiraRestClient restClient;
 
-    public JiraHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
+    public JiraHelper(final String configurationFileProperty, final String configurationFileDefault){
         super(configurationFileProperty, configurationFileDefault);
         try {
             JIRA_LOGIN = Util.require(fromUtil, "jira.login");
             JIRA_PASSWORD = Util.require(fromUtil, "jira.password");
             restClient = buildJiraRestClient();
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw new RuntimeException("Can not initialize indispensable JiraRestClient", e);
         }
     }
 

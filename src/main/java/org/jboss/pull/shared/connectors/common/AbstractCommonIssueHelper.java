@@ -25,6 +25,7 @@ package org.jboss.pull.shared.connectors.common;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
 
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -35,19 +36,12 @@ public abstract class AbstractCommonIssueHelper implements IssueHelper {
 
     protected Properties fromUtil;
 
-    public AbstractCommonIssueHelper(final String configurationFileProperty,
-                                     final String configurationFileDefault) throws Exception {
-
+    public AbstractCommonIssueHelper(final String configurationFileProperty, final String configurationFileDefault) {
         // We just want to initialise the properties here.
         try {
             this.fromUtil = Util.loadProperties(configurationFileProperty, configurationFileDefault);
-        } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException("Can not load properties from configuration file", e);
         }
-
     }
-
-
 }

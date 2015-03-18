@@ -23,6 +23,7 @@ package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
+import org.jboss.logging.Logger;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
@@ -51,6 +52,8 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     public static final String ISSUE_FIX_VERSION = "issue.fix.version";
 
     private static final String NOT_REVIEWED_TAG = "Pull request has not been reviewed yet";
+
+    private static final Logger LOGGER = Logger.getLogger(BasePullEvaluator.class);
 
     protected PullHelper helper;
 
@@ -91,9 +94,8 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         Comment comment = pullRequest.getLastMatchingGithubComment(Constants.MERGE);
 
         if (comment != null) {
-            System.out.printf("issue #%d updated at: %s\n", pullRequest.getNumber(),
-                    Util.getTime(pullRequest.getGithubUpdatedAt()));
-            System.out.printf("issue #%d reviewed at: %s\n", pullRequest.getNumber(), Util.getTime(comment.getCreatedAt()));
+            LOGGER.infof("issue #%d updated at: %s\n", pullRequest.getNumber(), Util.getTime(pullRequest.getGithubUpdatedAt()));
+            LOGGER.infof("issue #%d reviewed at: %s\n", pullRequest.getNumber(), Util.getTime(comment.getCreatedAt()));
 
             if (pullRequest.getGithubUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
                     && helper.isAdminUser(comment.getUser().getLogin())) {
@@ -115,13 +117,10 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         if (issues.isEmpty() || issues.size() > 1) {
             // since we are not sure what we are updating if multiple issues related to a single PR
             // we cannot do anything, it is better to leave it open then to close an issue wrongly
-            System.err
-                    .printf("WARNING: Couldn't update the relevant issue as merged since there are more than one or none such issue(-s) related to PR#%d.\n",
-                            pull.getNumber());
-            System.err.println("WARNING: related issues:");
+            LOGGER.warnf("WARNING: Couldn't update the relevant issue as merged since there are more than one or none such issue(-s) related to PR#%d.\n", pull.getNumber());
+            LOGGER.warn("WARNING: related issues:");
             for (Issue issue : issues) {
-                System.err.printf("WARNING: Type: %s, Number: %s, Url: %s\n", issue.getClass().getSimpleName(),
-                        issue.getNumber(), issue.getUrl());
+                LOGGER.warnf("WARNING: Type: %s, Number: %s, Url: %s\n", issue.getClass().getSimpleName(), issue.getNumber(), issue.getUrl());
             }
             return false;
         }
@@ -160,33 +159,22 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     protected Result isMergeableByUpstream(final RedhatPullRequest pull) {
         final Result mergeable = new Result(true);
 
-        try {
-            final List<RedhatPullRequest> upstreamPulls = getUpstreamPullRequest(pull);
-            if (upstreamPulls.isEmpty()) {
-                mergeable.setMergeable(false);
-                mergeable.addDescription("- Missing any upstream pull request");
-                return mergeable;
-            }
-
-            for (RedhatPullRequest pullRequest : upstreamPulls) {
-                if (!pullRequest.isMerged()) {
-                    mergeable.setMergeable(false);
-                    mergeable
-                            .addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
-                }
-            }
-
-            if (mergeable.isMergeable()) {
-                mergeable.addDescription("+ Upstream pull request is OK");
-            }
-
-        } catch (Exception ignore) {
-            System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
-
+        final List<RedhatPullRequest> upstreamPulls = getUpstreamPullRequest(pull);
+        if (upstreamPulls.isEmpty()) {
             mergeable.setMergeable(false);
-            mergeable.addDescription("Cannot get an upstream pull request of the pull request " + pull.getNumber() + ": "
-                    + ignore.getMessage());
+            mergeable.addDescription("- Missing any upstream pull request");
+            return mergeable;
+        }
+
+        for (RedhatPullRequest pullRequest : upstreamPulls) {
+            if (!pullRequest.isMerged()) {
+                mergeable.setMergeable(false);
+                mergeable.addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
+            }
+        }
+
+        if (mergeable.isMergeable()) {
+            mergeable.addDescription("+ Upstream pull request is OK");
         }
 
         return mergeable;

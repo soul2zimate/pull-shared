@@ -32,6 +32,7 @@ import java.util.TreeSet;
 import com.atlassian.jira.rest.client.domain.Field;
 import com.atlassian.jira.rest.client.domain.Version;
 
+import org.jboss.logging.Logger;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
@@ -50,6 +51,8 @@ public class JiraIssue implements Issue {
         NEW, CODING_IN_PROGRESS, OPEN, RESOLVED, READY_FOR_QA, PULL_REQUEST_SENT, QA_IN_PROGRESS, VERIFIED, REOPENED,
         CLOSED, UNKNOWN
     }
+
+    private static final Logger LOGGER = Logger.getLogger(JiraIssue.class);
 
     private static final long serialVersionUID = 7228344342017879011L;
     private String id;
@@ -97,7 +100,7 @@ public class JiraIssue implements Issue {
         try {
             this.url = new URL(Constants.JIRA_BASE_BROWSE + id);
         } catch (MalformedURLException malformed) {
-            System.err.printf("Invalid URL formed: %s. \n", malformed);
+            LOGGER.error("Invalid URL formed", malformed);
         }
     }
 

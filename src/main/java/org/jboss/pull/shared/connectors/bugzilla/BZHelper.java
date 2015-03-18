@@ -42,7 +42,7 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
     private final Bugzilla bugzillaClient;
 
-    public BZHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
+    public BZHelper(final String configurationFileProperty, final String configurationFileDefault){
         super(configurationFileProperty, configurationFileDefault);
         try {
             BUGZILLA_LOGIN = Util.require(fromUtil, "bugzilla.login");
@@ -51,9 +51,7 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
             // initialize bugzilla client
             bugzillaClient = new Bugzilla(Constants.BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw new RuntimeException("Can not initialize indispensable BZHepler", e);
         }
     }
 

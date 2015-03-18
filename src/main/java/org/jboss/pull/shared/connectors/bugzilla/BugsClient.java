@@ -28,15 +28,10 @@ public class BugsClient extends AbstractBugzillaClient {
         Map<String, ?> resultMap = fetchData(METHOD_BUG_GET, params);
 
         Object[] bugs = (Object[]) resultMap.get("bugs");
-        if (bugs.length == 1) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
-            Bug bug = new Bug(bugMap);
-            return bug;
-        } else {
-            System.out.println("Zero or more than one bug found with id: " + bugzillaId);
-            return null;
-        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
+        Bug bug = new Bug(bugMap);
+        return bug;
     }
 
     public boolean updateBugzillaTargetRelease(final int ids, final String... targetRelease) {
